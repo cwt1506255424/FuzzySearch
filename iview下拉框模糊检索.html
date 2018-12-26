@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>iview example</title>
+    <link rel="stylesheet" type="text/css" href="http://unpkg.com/iview/dist/styles/iview.css">
+
+    <style>
+        .select-box{
+            width: 200px;
+            position: relative;
+        }
+        .select-box-set{
+            position:absolute;
+        }
+        .select-box-ipt{
+            position:absolute;
+        }
+
+    </style>
+    <script type="text/javascript" src="http://vuejs.org/js/vue.min.js"></script>
+    <script type="text/javascript" src="http://unpkg.com/iview/dist/iview.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <div class="select-box">
+        <i-select class="select-box-set"
+                  filterable
+                  @on-change='changeSelFn(model1)'
+                  v-model="model1"
+        >
+            <i-option v-for="item in cityList" :value="item.value" :key="item.value">{{ item.label }}</i-option>
+        </i-select>
+
+        <i-input class="select-box-ipt"
+                 v-model="model1"
+                 :icon=hideIcon
+                 @on-click="hideIptFn"
+                 @on-focus="showOptFn"
+                 @on-blur="hideOptFn"
+                 @on-change="changeOptFn(event)"
+                 placeholder="Enter something..." ></i-input>
+
+    </div>
+
+</div>
+<script>
+new Vue({
+    el: '#app',
+    data () {
+        return {
+            hideIcon:'',
+            oldCityList: [
+                {
+                    value: 'New York',
+                    label: 'New York'
+                },
+                {
+                    value: 'London',
+                    label: 'London'
+                },
+                {
+                    value: 'Sydney',
+                    label: 'Sydney'
+                },
+                {
+                    value: 'Ottawa',
+                    label: 'Ottawa'
+                },
+                {
+                    value: 'Paris',
+                    label: 'Paris'
+                },
+                {
+                    value: 'Canberra',
+                    label: 'Canberra'
+                }
+            ],
+            cityList: [],
+            model1: ''
+        }
+    },
+    created:function(){
+        this.cityList = this.oldCityList;
+    },
+    watch:{
+        model1(n,o){
+            if(n==''){
+                this.hideIcon = '';
+                this.cityList = this.oldCityList;
+            }else {
+                this.hideIcon = 'ios-close-circle';
+            }
+        },
+    },
+    methods: {
+        hideIptFn(){
+            this.model1='';
+        },
+        // 模糊匹配不区分大小写，数组中对象是否含有对应字符串
+        searchList(arr, str) {
+            let newList = [];
+            // 要匹配字符串的首个字符
+            let startChar = str.charAt(0);
+            // 要匹配字符串的字符长度
+            let strLength = str.length;
+            for (let i = 0; i < arr.length; i++) {
+                // 默认数组arr中对象arr[i]不存在str
+                let isExist = false;
+                let obj = arr[i];
+                for (let key in obj) {
+                    if (typeof (obj[key]) === 'function') {
+                        obj[key]()
+                    } else {
+                        let keyValue = '';
+                        // 获取arr[i][key]的值
+                        if (obj[key] !== null && typeof (obj[key]) === 'string') {
+                            keyValue = obj[key]
+                        } else if (obj[key] !== null && typeof (obj[key]) !== 'string') {
+                            keyValue = JSON.stringify(obj[key])
+                        }
+                        // arr[i][key]中的各个位置的字符与str的0位置字符startChar对比如果相等，
+                        // 在arr[i][key]中从j位置截取与str长度相同的字符，对比是否相等
+                        for (let j = 0; j < keyValue.length; j++) {
+                            // 把原有数据转化为小写，输入数据也转化为纯小写，实现模糊匹配,如区分大小写，可删除toLowerCase()
+                            if (keyValue.charAt(j).toLowerCase() === startChar.toLowerCase()) {
+                                if (keyValue.substring(j).substring(0, strLength).toLowerCase() === str.toLowerCase()) {
+                                    // 模糊匹配到的字符存在表示arr[i]中存在str
+                                    isExist = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                // 当arr[i]中存在str时，把arr[i]放入一个新数组
+                if (isExist === true) {
+                    newList.push(obj);
+                }
+            }
+            // 最后返回这个新数组
+            return newList;
+        },
+        showOptFn(){
+            $(".select-box-set").addClass( "ivu-select-visible" );
+            $(".ivu-select-dropdown").show();
+            $(".ivu-select-dropdown").css({'left':'0px'});
+        },
+        hideOptFn(){
+            $(".select-box-set").removeClass( "ivu-select-visible" );
+            $(".ivu-select-dropdown").hide();
+        },
+        changeOptFn(e){
+            if( e.target.value!="" && e.target.value !== undefined){
+                this.model1 = e.target.value;
+                setTimeout(() => {
+                    this.$nextTick(function(){
+                        $(".select-box-set").find($(".ivu-select-input")).val(this.model1);
+                    })
+                    this.cityList = this.searchList(this.cityList,this.model1);
+                }, 100);
+            }
+
+        },
+        changeSelFn(model1){
+            console.log(model1);
+        },
+    },
+
+})
+</script>
+</body>
+</html>
